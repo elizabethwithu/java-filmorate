@@ -244,7 +244,7 @@ public class UserControllerTest {
                         status().isInternalServerError(),
                         MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                         MockMvcResultMatchers.content().json("{" +
-                                "\"updateUser\":\"Пользователь User(" +
+                                "\"Некорректное значение\":\"User(" +
                                 "login=nicky, " +
                                 "name=Alex, " +
                                 "email=mail@mail.ru, " +
@@ -390,11 +390,8 @@ public class UserControllerTest {
         mockMvc.perform(requestBuilder)
 
                 .andExpectAll(
-                        status().isBadRequest(),
                         MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-                        MockMvcResultMatchers.content().json("{" +
-                                "\"findAll\":\"Список пользователей пуст\"" +
-                                "}")
+                        MockMvcResultMatchers.content().json("[]")
                 );
     }
 

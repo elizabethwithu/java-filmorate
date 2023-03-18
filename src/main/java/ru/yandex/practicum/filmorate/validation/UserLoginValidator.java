@@ -7,6 +7,7 @@ public class UserLoginValidator implements ConstraintValidator<UserLogin, String
 
     @Override
     public boolean isValid(final String valueToValidate, final ConstraintValidatorContext context) {
-        return !valueToValidate.contains(" ");
+        return valueToValidate != null
+                && !valueToValidate.contains(" ");
     }
 }

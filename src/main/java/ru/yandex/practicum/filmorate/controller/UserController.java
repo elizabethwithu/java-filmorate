@@ -3,8 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.GetAllUsersException;
-import ru.yandex.practicum.filmorate.exceptions.GetUserException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
@@ -36,7 +35,7 @@ public class UserController {
             users.replace(user.getId(), user);
             log.debug("Пользатель {} успешно обновлен.", user);
         } else {
-            throw new GetUserException(user);
+            throw new NotFoundException(user);
         }
 
         return user;
@@ -44,10 +43,6 @@ public class UserController {
 
     @GetMapping("/users")
     public Collection<User> findAll() {
-        if (users.isEmpty()) {
-            throw new GetAllUsersException();
-        }
-
         log.debug("Текущее количество пользователей: {}", users.size());
         return users.values();
     }

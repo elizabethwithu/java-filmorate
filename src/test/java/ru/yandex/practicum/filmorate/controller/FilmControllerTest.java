@@ -335,14 +335,15 @@ public class FilmControllerTest {
 
     @SneakyThrows
     @Test
-    void updateWithUnknownFilm() {
+    void updateUnknownFilm() {
         RequestBuilder requestBuilder = request(HttpMethod.PUT,"http://localhost:8080/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{" +
                         "    \"name\": \"Матрица\"," +
                         "    \"description\": \"Матрица\"," +
                         "    \"releaseDate\": \"1999-07-03\"," +
-                        "    \"duration\": 136" +
+                        "    \"duration\": 136," +
+                        "    \"id\": 2" +
                         " }");
 
         mockMvc.perform(requestBuilder)
@@ -351,11 +352,11 @@ public class FilmControllerTest {
                         status().isInternalServerError(),
                         MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                         MockMvcResultMatchers.content().json("{" +
-                                        "\"updateFilm\":\"Фильм Film(" +
+                                        "\"Некорректное значение\":\"Film(" +
                                                          "name=Матрица, " +
                                                          "description=Матрица, " +
                                                          "releaseDate=1999-07-03, " +
-                                                         "duration=136, id=0) " +
+                                                         "duration=136, id=2) " +
                                                          "отсутствует в памяти программы.\"" +
                                                          "}")
                 );
@@ -413,11 +414,8 @@ public class FilmControllerTest {
         mockMvc.perform(requestBuilder)
 
                 .andExpectAll(
-                        status().isBadRequest(),
                         MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-                        MockMvcResultMatchers.content().json("{" +
-                                "\"findAll\":\"Список фильмов пуст\"" +
-                                "}")
+                        MockMvcResultMatchers.content().json("[]")
                 );
     }
 }

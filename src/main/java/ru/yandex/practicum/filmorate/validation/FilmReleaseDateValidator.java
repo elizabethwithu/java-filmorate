@@ -1,9 +1,5 @@
 package ru.yandex.practicum.filmorate.validation;
 
-import org.springframework.core.MethodParameter;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDate;

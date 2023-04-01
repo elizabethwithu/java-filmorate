@@ -17,4 +17,8 @@ public class NotFoundException extends RuntimeException {
                 String.format(message, film)
         );
     }
+
+    public NotFoundException(String s) {
+        super(s);
+    }
 }

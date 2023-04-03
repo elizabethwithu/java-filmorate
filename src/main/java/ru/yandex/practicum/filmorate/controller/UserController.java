@@ -1,11 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -13,41 +12,35 @@ import java.util.Collection;
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
-    private final UserStorage userStorage;
-
-    @Autowired
-    public UserController(UserService userService, UserStorage userStorage) {
-        this.userService = userService;
-        this.userStorage = userStorage;
-    }
 
     @PostMapping()
     public User createUser(@Valid @RequestBody User user) {
-        return userStorage.create(user);
+        return userService.getUserStorage().create(user);
     }
 
     @PutMapping()
     public User updateUser(@Valid @RequestBody User user) {
-        return userStorage.update(user);
+        return userService.getUserStorage().update(user);
     }
 
     @GetMapping()
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.getUserStorage().findAll();
     }
 
     @DeleteMapping("/{id}")
     public void removeUser(@PathVariable Integer id) {
-        userStorage.remove(id);
+        userService.getUserStorage().remove(id);
     }
 
     @GetMapping("/{id}")
     public User findUserById(@PathVariable Integer id) {
-        return userService.findUserById(id);
+        return userService.getUserStorage().findUserById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}") //добавление в друзья

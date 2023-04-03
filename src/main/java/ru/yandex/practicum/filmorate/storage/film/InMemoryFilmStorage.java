@@ -29,15 +29,9 @@ public class InMemoryFilmStorage implements FilmStorage { //логика хра�
 
     @Override
     public void remove(Integer id) {
-        if (id <= 0) {
-            throw new NotValidId();
-        }
-        if (films.containsKey(id)) {
-            films.remove(id);
-            log.debug("Фильм {} успешно удален.", id);
-        } else {
-            throw new NotFoundException("Фильм с запрашиваемым id отсутствует.");
-        }
+        Film film = findFilmById(id);
+        films.remove(id);
+        log.debug("Фильм {} успешно удален.", film);
     }
 
     @Override
@@ -58,8 +52,15 @@ public class InMemoryFilmStorage implements FilmStorage { //логика хра�
     }
 
     @Override
-    public HashMap<Integer, Film> getFilms() {
-        return films;
+    public Film findFilmById(Integer id) {
+        if (id <= 0) {
+            throw new NotValidId();
+        }
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с запрашиваемым id отсутствует.");
+        }
+        log.debug("Получен фильм с айди {}.", id);
+        return films.get(id);
     }
 
 }

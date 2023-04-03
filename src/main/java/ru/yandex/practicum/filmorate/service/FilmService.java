@@ -1,67 +1,60 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.NotValidId;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Getter
+@RequiredArgsConstructor
 @Service
 public class FilmService { //добавление и удаление лайка, вывод 10 наиболее популярных фильмов по количеству лайков
     private final FilmStorage filmStorage;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage) {
-        this.filmStorage = filmStorage;
-    }
+    private final UserStorage userStorage;
 
     public void addLike(Integer filmId, Integer userId) {
-        checkId(filmId, userId);
-        findFilmById(filmId).getIdUsersWhoLikedFilm().add(userId);
-        log.debug("Пользователь c id {} поставил лайк фильму с айди {}.", userId, filmId);
+        Film film = filmStorage.findFilmById(filmId);
+        User user = userStorage.findUserById(userId);
+
+        film.getIdUsersWhoLikedFilm().add(userId);
+        log.debug("Пользователь c {} поставил лайк фильму с айди {}.", user, filmId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        checkId(filmId, userId);
-        if (findFilmById(filmId).getIdUsersWhoLikedFilm().isEmpty()) {
+        User user = userStorage.findUserById(userId);
+        Set<Integer> idUsersWhoLikedFilm = filmStorage.findFilmById(filmId).getIdUsersWhoLikedFilm();
+
+        if (idUsersWhoLikedFilm.isEmpty()) {
             throw new NotFoundException("Список фильмов пуст.");
         }
-        findFilmById(filmId).getIdUsersWhoLikedFilm().remove(userId);
-        log.debug("Пользователь c id {} удалил лайк фильму с айди {}.", userId, filmId);
+        idUsersWhoLikedFilm.remove(userId);
+        log.debug("Пользователь {} удалил лайк фильму с айди {}.", user, filmId);
     }
 
     public List<Film> findTopFilmByLikes(Integer count) {
-        if (filmStorage.findAll().isEmpty()) {
+        Collection<Film> films = filmStorage.findAll();
+
+        if (films.isEmpty()) {
             throw new NotFoundException("Список фильмов пуст.");
         }
-        log.debug("Топ {} фильмов успешно отобран.", count);
-        return filmStorage.findAll().stream()
+        List<Film> topFilms = films.stream()
                 .sorted(Comparator.comparing(Film::getFilmsLikes).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
-    }
+        log.debug("Топ {} фильмов успешно отобран.", count);
 
-    public Film findFilmById(Integer id) {
-        if (id <= 0) {
-            throw new NotValidId();
-        }
-        if (!filmStorage.getFilms().containsKey(id)) {
-            throw new NotFoundException("Фильм с запрашиваемым id отсутствует.");
-        }
-        log.debug("Получен фильм с айди {}.", id);
-        return filmStorage.getFilms().get(id);
-    }
-
-    private void checkId(Integer filmId, Integer userId) {
-        if (filmId <= 0 || userId <= 0) {
-            throw new NotValidId();
-        }
+        return topFilms;
     }
 }

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -11,7 +10,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 @Slf4j
-@Data
 @Component
 public class InMemoryUserStorage implements UserStorage { //логика хранения, обновления и поиска объектов
     protected final HashMap<Integer, User> users = new HashMap<>();
@@ -35,15 +33,9 @@ public class InMemoryUserStorage implements UserStorage { //логика хра�
 
     @Override
     public void remove(Integer id) {
-        if (id <= 0) {
-            throw new NotValidId();
-        }
-        if (users.containsKey(id)) {
-            users.remove(id);
-            log.debug("Пользователь с id {} успешно удален.", id);
-        } else {
-            throw new NotFoundException("Пользователь с запрашиваемым id не зарегестрирован.");
-        }
+        User user = findUserById(id);
+        users.remove(id);
+        log.debug("Пользователь {} успешно удален.", user);
     }
 
     @Override
@@ -64,7 +56,14 @@ public class InMemoryUserStorage implements UserStorage { //логика хра�
     }
 
     @Override
-    public HashMap<Integer, User> getUsers() {
-        return users;
+    public User findUserById(Integer id) {
+        if (id <= 0) {
+            throw new NotValidId();
+        }
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Пользователь с запрашиваемым id не зарегестрирован.");
+        }
+        log.debug("Найден пользователь c id {}.", id);
+        return users.get(id);
     }
 }

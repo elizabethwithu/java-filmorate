@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,11 +11,30 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Getter
 @RequiredArgsConstructor
 @Service
 public class UserService { //добавление в друзья, удаление из друзей, вывод списка общих друзей
     private final UserStorage userStorage;
+
+    public User createUser(User user) {
+        return userStorage.create(user);
+    }
+
+    public User updateUser(User user) {
+        return userStorage.update(user);
+    }
+
+    public Collection<User> findAllUsers() {
+        return userStorage.findAll();
+    }
+
+    public void removeUserById(Integer id) {
+        userStorage.remove(id);
+    }
+
+    public User findUserById(Integer id) {
+        return userStorage.findUserById(id);
+    }
 
     public void addFriend(Integer userId, Integer friendId) {
         User user = userStorage.findUserById(userId);

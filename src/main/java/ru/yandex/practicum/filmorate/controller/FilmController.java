@@ -20,22 +20,22 @@ public class FilmController {
 
     @PostMapping()
     public Film createFilm(@Valid @RequestBody Film film) {
-        return filmService.getFilmStorage().create(film);
+        return filmService.createFilm(film);
     }
 
     @DeleteMapping("/{id}")
     public void removeFilm(@PathVariable Integer id) {
-        filmService.getFilmStorage().remove(id);
+        filmService.removeFilmById(id);
     }
 
     @PutMapping()
     public Film updateFilm(@Valid @RequestBody Film film) throws NotFoundException {
-        return filmService.getFilmStorage().update(film);
+        return filmService.updateFilm(film);
     }
 
     @GetMapping()
     public Collection<Film> findAll() {
-        return filmService.getFilmStorage().findAll();
+        return filmService.findAllFilms();
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -45,7 +45,7 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Film findFilmById(@PathVariable Integer id) {
-        return filmService.getFilmStorage().findFilmById(id);
+        return filmService.findFilmById(id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,12 +16,31 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Getter
 @RequiredArgsConstructor
 @Service
 public class FilmService { //добавление и удаление лайка, вывод 10 наиболее популярных фильмов по количеству лайков
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+
+    public Film createFilm(Film film) {
+        return filmStorage.create(film);
+    }
+
+    public void removeFilmById(Integer id) {
+        filmStorage.remove(id);
+    }
+
+    public Film updateFilm(Film film) {
+        return filmStorage.update(film);
+    }
+
+    public Collection<Film> findAllFilms() {
+        return filmStorage.findAll();
+    }
+
+    public Film findFilmById(Integer id) {
+        return filmStorage.findFilmById(id);
+    }
 
     public void addLike(Integer filmId, Integer userId) {
         Film film = filmStorage.findFilmById(filmId);

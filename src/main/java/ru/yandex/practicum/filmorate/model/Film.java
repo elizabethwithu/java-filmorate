@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import ru.yandex.practicum.filmorate.validation.FilmReleaseDate;
 
 import javax.validation.constraints.NotBlank;
@@ -10,12 +8,16 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.validation.FilmValidationFailedMessage.*;
 
 @Builder
 @AllArgsConstructor
-@Data
+@NoArgsConstructor
+@Getter
+@Setter
 public class Film {
     @NotBlank(message = NAME_IS_BLANK)
     private String name;
@@ -33,5 +35,11 @@ public class Film {
     private int duration;
 
     private Integer id;
+
+    private Set<Integer> idUsersWhoLikedFilm = new HashSet<>();
+
+    public static Integer getFilmsLikes(Film film) {
+            return film.getIdUsersWhoLikedFilm().size();
+        }
 }
 

@@ -31,10 +31,20 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<?> notFoundException(NotFoundException e) {
         Map<String, String> errors = new HashMap<>();
+        errors.put("Объект не найден", e.getMessage());
+
+        log.error(e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
+
+        return ResponseEntity.status(404).body(errors);
+    }
+
+    @ExceptionHandler(NotValidId.class)
+    public ResponseEntity<?> notValidIdException(NotValidId e) {
+        Map<String, String> errors = new HashMap<>();
         errors.put("Некорректное значение", e.getMessage());
 
         log.error(e.getStackTrace()[0].getMethodName() + ": " + e.getMessage());
 
-        return ResponseEntity.internalServerError().body(errors);
+        return ResponseEntity.status(404).body(errors);
     }
 }

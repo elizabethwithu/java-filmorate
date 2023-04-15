@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 public class UserControllerTest {
     @Autowired
@@ -102,9 +104,9 @@ public class UserControllerTest {
         RequestBuilder requestBuilder = request(HttpMethod.POST,"http://localhost:8080/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{" +
-                        "    \"login\": \"nicky\"," +
+                        "    \"login\": \"mickyy\"," +
                         "    \"name\": \"\"," +
-                        "    \"email\": \"mail@mail.ru\"," +
+                        "    \"email\": \"email@mail.ru\"," +
                         "    \"birthday\": \"2000-08-20\"" +
                         " }");
 
@@ -114,9 +116,9 @@ public class UserControllerTest {
                         MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                         MockMvcResultMatchers.content().json(
                                 "{" +
-                                "              \"login\": \"nicky\"," +
-                                "              \"name\": \"nicky\"," +
-                                "              \"email\": \"mail@mail.ru\"," +
+                                "              \"login\": \"mickyy\"," +
+                                "              \"name\": \"mickyy\"," +
+                                "              \"email\": \"email@mail.ru\"," +
                                 "              \"birthday\": \"2000-08-20\"" +
                                 "            }")
                 );
@@ -312,46 +314,46 @@ public class UserControllerTest {
                 );
     }
 
-//    @SneakyThrows
-//    @Test
-//    void succeedFindAllUsers() {
-//        RequestBuilder requestBuilder = request(HttpMethod.POST,"http://localhost:8080/users")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content("{" +
-//                        "    \"login\": \"nicky\"," +
-//                        "    \"name\": \"Nick\"," +
-//                        "    \"email\": \"mail@mail.ru\"," +
-//                        "    \"birthday\": \"2000-08-20\"" +
-//                        " }");
-//
-//        mockMvc.perform(requestBuilder);
-//
-//        RequestBuilder nextRequestBuilder = request(HttpMethod.GET,"http://localhost:8080/users");
-//        mockMvc.perform(nextRequestBuilder)
-//
-//                .andExpectAll(
-//                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-//                        MockMvcResultMatchers.content().json(
-//                                "[{" +
-//                                        "       \"login\": \"nicky\"," +
-//                                        "       \"name\": \"Nick\"," +
-//                                        "       \"email\": \"mail@mail.ru\"," +
-//                                        "       \"birthday\": \"2000-08-20\"," +
-//                                        "       \"id\": 1" +
-//                                        "   }]")
-//                );
-//    }
+    @SneakyThrows
+    @Test
+    void succeedFindAllUsers() {
+        RequestBuilder requestBuilder = request(HttpMethod.POST,"http://localhost:8080/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{" +
+                        "    \"login\": \"nicky\"," +
+                        "    \"name\": \"Nick\"," +
+                        "    \"email\": \"mail@mail.ru\"," +
+                        "    \"birthday\": \"2000-08-20\"" +
+                        " }");
 
-//    @SneakyThrows
-//    @Test
-//    void findAllWhenUsersListIsEmpty() {
-//        RequestBuilder requestBuilder = request(HttpMethod.GET,"http://localhost:8080/users");
-//
-//        mockMvc.perform(requestBuilder)
-//
-//                .andExpectAll(
-//                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-//                        MockMvcResultMatchers.content().json("[]")
-//                );
-//    }
+        mockMvc.perform(requestBuilder);
+
+        RequestBuilder nextRequestBuilder = request(HttpMethod.GET,"http://localhost:8080/users");
+        mockMvc.perform(nextRequestBuilder)
+
+                .andExpectAll(
+                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+                        MockMvcResultMatchers.content().json(
+                                "[{" +
+                                        "       \"login\": \"nicky\"," +
+                                        "       \"name\": \"Nick\"," +
+                                        "       \"email\": \"mail@mail.ru\"," +
+                                        "       \"birthday\": \"2000-08-20\"," +
+                                        "       \"id\": 1" +
+                                        "   }]")
+                );
+    }
+
+    @SneakyThrows
+    @Test
+    void findAllWhenUsersListIsEmpty() {
+        RequestBuilder requestBuilder = request(HttpMethod.GET,"http://localhost:8080/users");
+
+        mockMvc.perform(requestBuilder)
+
+                .andExpectAll(
+                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+                        MockMvcResultMatchers.content().json("[]")
+                );
+    }
 }

@@ -8,8 +8,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.validation.UserValidationFailedMessage.*;
 
@@ -19,6 +17,8 @@ import static ru.yandex.practicum.filmorate.validation.UserValidationFailedMessa
 @Getter
 @Setter
 public class User {
+    private Integer id;
+
     @NotBlank(message = LOGIN_IS_BLANK)
     @UserLogin(message = LOGIN_CONTAINS_WHITESPACE)
     private String login;
@@ -32,8 +32,4 @@ public class User {
     @NotNull(message = BIRTHDATE_IS_NULL)
     @Past(message = BIRTHDATE_IS_AFTER_NOW)
     private LocalDate birthday;
-
-    private Integer id;
-
-    private Set<Integer> friends = new HashSet<>();
 }

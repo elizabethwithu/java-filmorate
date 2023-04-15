@@ -38,8 +38,8 @@ public class ControllerExceptionHandler {
         return ResponseEntity.status(404).body(errors);
     }
 
-    @ExceptionHandler(NotValidId.class)
-    public ResponseEntity<?> notValidIdException(NotValidId e) {
+    @ExceptionHandler(NotValidParameterException.class)
+    public ResponseEntity<?> notValidIdException(NotValidParameterException e) {
         Map<String, String> errors = new HashMap<>();
         errors.put("Некорректное значение", e.getMessage());
 

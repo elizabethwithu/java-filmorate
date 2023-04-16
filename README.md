@@ -1,7 +1,8 @@
 # java-filmorate
 В проекте используется реляционная база данных PosgreSQL.
 Структура базы данных представлена на ER-диаграмме:
-![](/Users/elizavetakarpova/Desktop/filmorate_base.png)
+<img width="913" alt="filmorate_base" src="https://user-images.githubusercontent.com/117889272/232309050-b3bffc28-6b00-4904-b81d-80c081ca154f.png">
+
 А также доступна по [ссылке](https://app.quickdatabasediagrams.com/?code=a3c3bdede392db13fd57#/).
 
 Диаграмма включает следующие таблицы:

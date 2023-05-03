@@ -1,5 +1,6 @@
-package ru.yandex.practicum.filmorate.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -11,13 +12,10 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.sql.ResultSet;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class GenreDaoImpl implements GenreDao {
     private final JdbcTemplate jdbcTemplate;
-
-    public GenreDaoImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public Genre findByGenreId(int id) {

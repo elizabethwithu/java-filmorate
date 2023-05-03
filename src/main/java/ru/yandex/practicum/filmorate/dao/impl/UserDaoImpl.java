@@ -1,5 +1,6 @@
-package ru.yandex.practicum.filmorate.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -22,13 +23,10 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class UserDaoImpl implements UserDao {
     private final JdbcTemplate jdbcTemplate;
-
-    public UserDaoImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public int create(User user) {
@@ -129,7 +127,7 @@ public class UserDaoImpl implements UserDao {
     public void removeFriend(int userId, int friendId) {
         String query = "delete from FRIENDS " +
                 "where USER_SENDER_ID = ? and FRIEND_ID = ? or FRIEND_ID = ? and USER_SENDER_ID = ?";
-        jdbcTemplate.update(query, userId, friendId, friendId, userId);
+        jdbcTemplate.update(query, userId, friendId, userId, friendId);
 
     }
 

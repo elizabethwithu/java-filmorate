@@ -1,11 +1,18 @@
-package ru.yandex.practicum.filmorate.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -15,19 +22,16 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class FilmDaoImpl implements FilmDao {
     private final JdbcTemplate jdbcTemplate;
-
-    public FilmDaoImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override
     public int create(Film film) {
@@ -82,14 +86,19 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Collection<Film> findAll() {
-        String query = "select * from FILMS";
+        String query = "select F.*, MR.RATING_NAME " +
+                "       from FILMS F " +
+                "       join MPA_RATING MR on MR.RATING_ID = F.RATING_ID";
 
         return jdbcTemplate.query(query, FILM_ROW_MAPPER);
     }
 
     @Override
     public Film findFilmById(Integer id) {
-        String query = "select * from FILMS where FILM_ID = ?";
+        String query = "select F.*, MR.RATING_NAME " +
+                "       from FILMS F " +
+                "       join MPA_RATING MR on MR.RATING_ID = F.RATING_ID " +
+                "       where FILM_ID = ?";
 
         try {
             return jdbcTemplate.queryForObject(query, FILM_ROW_MAPPER, id);
@@ -112,23 +121,30 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     public List<Film> findTopFilmsByLikesCount(int count) {
-        String query = "select f.* " +
-                "from FAVORITE_FILMS ff join FILMS f on ff.FILM_ID = f.FILM_ID group by ff.FILM_ID, FILM_NAME " +
-                "order by COUNT(USER_ID) DESC limit ?";
+        String query = "select F.*, MR.RATING_NAME " +
+                "       from FILMS F join MPA_RATING MR on MR.RATING_ID = F.RATING_ID " +
+                "       left join FAVORITE_FILMS ff on f.FILM_ID = ff.FILM_ID " +
+                "       group by f.FILM_ID, FILM_NAME " +
+                "       order by COUNT(USER_ID) DESC limit ?";
 
         return jdbcTemplate.query(query, FILM_ROW_MAPPER, count);
     }
 
-    public List<Film> findTopFilmsWithoutLikes(int count) {
-        String query = "select * from FILMS limit ?";
+    public void addGenresToFilm(int filmId, List<Genre> genres) {
+        String query = "insert into FILM_GENRE (FILM_ID, GENRE_ID) values (?,?)";
 
-        return jdbcTemplate.query(query, FILM_ROW_MAPPER, count);
-    }
+        jdbcTemplate.batchUpdate(
+                query,
+                new BatchPreparedStatementSetter() {
+                    public void setValues(@NotNull PreparedStatement ps, int i) throws SQLException {
+                        ps.setInt(1, filmId);
+                        ps.setInt(2, genres.get(i).getId());
+                    }
 
-    @Override
-    public void addGenreToFilm(int filmId, int genreId) {
-        String query = "insert into FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?,?)";
-        jdbcTemplate.update(query, filmId, genreId);
+                    public int getBatchSize() {
+                        return genres.size();
+                    }
+                });
     }
 
     @Override
@@ -138,13 +154,44 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public List<Genre> findGenreByFilmId(int filmId) {
-        String sql = "select G.* from GENRE G join FILM_GENRE FG on G.GENRE_ID = FG.GENRE_ID where FG.FILM_ID=?";
+    public List<Genre> findGenresByFilmId(int filmId) {
+        String sql = "select G.* " +
+                "     from GENRE G " +
+                "     join FILM_GENRE FG on G.GENRE_ID = FG.GENRE_ID where FG.FILM_ID=?";
         return jdbcTemplate.query(sql,
                 (ResultSet rs, int rowNum) -> Genre.builder()
                         .id(rs.getInt(1))
                         .name(rs.getString(2))
                         .build(), filmId);
+    }
+
+    @Override
+    public Map<Integer, List<Genre>> findGenresByFilmIdIn(List<Integer> filmIds) {
+        SqlParameterSource params = new MapSqlParameterSource("filmIds", filmIds);
+        String sql = "select FG.FILM_ID, G.GENRE_ID, G.GENRE_NAME " +
+                "     from FILM_GENRE FG " +
+                "     join GENRE G on G.GENRE_ID = FG.GENRE_ID " +
+                "     where FG.FILM_ID IN (:filmIds)";
+        SqlRowSet rowSet = namedParameterJdbcTemplate.queryForRowSet(sql, params);
+
+        Map<Integer, List<Genre>> filmGenresMap = new HashMap<>();
+        while (rowSet.next()) {
+            int id = rowSet.getInt(1);
+
+            List<Genre> genreList = filmGenresMap.get(id);
+            if (genreList == null) {
+                genreList = new ArrayList<>();
+            }
+            Genre genre = Genre.builder()
+                    .id(rowSet.getInt(2))
+                    .name(rowSet.getString(3))
+                    .build();
+            genreList.add(genre);
+
+            filmGenresMap.put(id, genreList);
+        }
+
+        return filmGenresMap;
     }
 
     public static final RowMapper<Film> FILM_ROW_MAPPER = (ResultSet rs, int rowNum) -> Film.builder()
@@ -153,6 +200,9 @@ public class FilmDaoImpl implements FilmDao {
             .description(rs.getString(3))
             .releaseDate(Objects.requireNonNull(rs.getDate(4)).toLocalDate())
             .duration(rs.getInt(5))
-            .mpa(new Mpa(rs.getInt(6)))
+            .mpa(Mpa.builder()
+                    .id(rs.getInt(6))
+                    .name(rs.getString(7))
+                    .build())
             .build();
 }

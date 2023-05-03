@@ -3,16 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.MpaDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -24,14 +21,12 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmDao filmDao;
     private final UserDao userDao;
-    private final MpaDao mpaDao;
 
     public Film createFilm(Film film) {
         int filmId = filmDao.create(film);
-        film.setId(filmId);
-        film.setMpa(mpaDao.findMpaByFilmId(filmId));
-        List<Genre> genres = film.getGenres();
 
+        film.setId(filmId);
+        List<Genre> genres = film.getGenres();
         setGenresForFilm(genres, film);
         log.debug("Фильм {} успешно добавлен.", film);
         return film;
@@ -47,7 +42,6 @@ public class FilmService {
     public Film updateFilm(Film film) {
         filmDao.findFilmById(film.getId());
         filmDao.update(film);
-        film.setMpa(mpaDao.findMpaByFilmId(film.getId()));
         List<Genre> genres = film.getGenres();
 
         setGenresForFilm(genres, film);
@@ -57,9 +51,16 @@ public class FilmService {
 
     public Collection<Film> findAllFilms() {
         Collection<Film> films = filmDao.findAll();
+        List<Integer> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+        Map<Integer, List<Genre>> filmIdGenresMap = filmDao.findGenresByFilmIdIn(filmIds);
         for (Film film : films) {
-            film.setMpa(mpaDao.findMpaByFilmId(film.getId()));
-            film.setGenres(filmDao.findGenreByFilmId(film.getId()));
+            List<Genre> genres = new ArrayList<>();
+            if (filmIdGenresMap.containsKey(film.getId())) {
+                genres = filmIdGenresMap.get(film.getId());
+            }
+            film.setGenres(genres);
         }
         log.debug("Текущее количество фильмов: {}", films.size());
         return films;
@@ -67,8 +68,7 @@ public class FilmService {
 
     public Film findFilmById(Integer id) {
         Film film = filmDao.findFilmById(id);
-        film.setMpa(mpaDao.findMpaByFilmId(id));
-        film.setGenres(filmDao.findGenreByFilmId(id));
+        film.setGenres(filmDao.findGenresByFilmId(id));
 
         log.debug("Получен фильм {}.", film);
         return film;
@@ -91,12 +91,9 @@ public class FilmService {
 
     public List<Film> findTopFilmByLikes(Integer count) {
         List<Film> topFilms = filmDao.findTopFilmsByLikesCount(count);
-        if (topFilms.isEmpty()) {
-            topFilms = filmDao.findTopFilmsWithoutLikes(count);
-        }
+
         for (Film film : topFilms) {
-            film.setMpa(mpaDao.findMpaByFilmId(film.getId()));
-            film.setGenres(filmDao.findGenreByFilmId(film.getId()));
+            film.setGenres(filmDao.findGenresByFilmId(film.getId()));
         }
         log.debug("Топ {} фильмов успешно отобран.", count);
 
@@ -113,10 +110,8 @@ public class FilmService {
             genres = genres.stream().filter(distinctByKey(Genre::getId)).collect(Collectors.toList());
 
             filmDao.removeFilmsGenres(film.getId());
-            for (Genre genre : genres) {
-                filmDao.addGenreToFilm(film.getId(), genre.getId());
-            }
-            film.setGenres(filmDao.findGenreByFilmId(film.getId()));
+            filmDao.addGenresToFilm(film.getId(), genres);
+            film.setGenres(filmDao.findGenresByFilmId(film.getId()));
         }
     }
 }

@@ -41,8 +41,9 @@ public class UserService {
     }
 
     public void removeUserById(Integer id) {
+        User user = userDao.findUserById(id);
         userDao.remove(id);
-        log.debug("Пользователь с id {} успешно удален.", id);
+        log.debug("Пользователь {} успешно удален.", user);
     }
 
     public User findUserById(Integer id) {
@@ -55,9 +56,10 @@ public class UserService {
         User user = userDao.findUserById(userId);
         User friend = userDao.findUserById(friendId);
 
-        if (findUsersFriends(2).contains(user)) {
+        if (findUsersFriends(friendId).contains(user)) {
             userDao.addFriend(userId, friendId, true);
             log.debug("Пользователь {} подтвердил дружбу с пользователем {}", user, friend);
+            return;
         }
         userDao.addFriend(userId, friendId, false);
         log.debug("Пользователь {} добавил в друзья пользователя {}.", user, friend);

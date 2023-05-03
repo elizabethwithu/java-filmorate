@@ -1,5 +1,6 @@
-package ru.yandex.practicum.filmorate.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -11,26 +12,10 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.sql.ResultSet;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class MpaDaoImpl implements MpaDao {
     private final JdbcTemplate jdbcTemplate;
-
-    public MpaDaoImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    @Override
-    public Mpa findMpaByFilmId(Integer filmId) {
-        String sql = "select M.* from MPA_RATING M join FILMS F on M.RATING_ID = F.RATING_ID where F.FILM_ID=?";
-        try {
-            return jdbcTemplate.queryForObject(sql, (ResultSet rs, int rowNum) -> Mpa.builder()
-                    .id(rs.getInt(1))
-                    .name(rs.getString(2))
-                    .build(), filmId);
-        } catch (IncorrectResultSizeDataAccessException e) {
-            throw new NotFoundException("Рейтинг фильма с запрашиваемым id отсутствует.");
-        }
-    }
 
     @Override
     public Mpa findMpaById(Integer id) {

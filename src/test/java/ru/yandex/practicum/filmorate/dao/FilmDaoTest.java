@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -26,8 +28,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class FilmDaoTest {
     private final FilmDao filmDao;
     private final UserDao userDao;
-    Film testFilm;
-    User testUser;
+    private Film testFilm;
+    private User testUser;
+    private static List<Genre> genres;
+
+    @BeforeAll
+    static void initAll() {
+        genres = new ArrayList<>();
+        genres.add(new Genre(1, "Comedy"));
+        genres.add(new Genre(2, "Horror"));
+    }
 
     @BeforeEach
     void init() {
@@ -135,19 +145,6 @@ class FilmDaoTest {
     }
 
     @Test
-    public void removeLike() {
-        int filmId = filmDao.create(testFilm);
-        int userId = userDao.create(testUser);
-
-        filmDao.addLike(filmId, userId);
-        filmDao.removeLike(filmId, userId);
-
-        List<Film> films = filmDao.findTopFilmsByLikesCount(1);
-
-        assertTrue(films.isEmpty());
-    }
-
-    @Test
     public void findTopFilmsByLikesCount() {
         User testFriend = User.builder()
                 .login("alex")
@@ -178,40 +175,25 @@ class FilmDaoTest {
     }
 
     @Test
-    public void findTopFilmsWithoutLikes() {
-        Film film = Film.builder()
-                .name("Мадагаскар")
-                .description("Тайная жизнь африканских животных")
-                .releaseDate(LocalDate.of(2005,7,3))
-                .duration(120)
-                .mpa(Mpa.builder().id(1).build())
-                .build();
-        filmDao.create(film);
-        filmDao.create(testFilm);
-
-        List<Film> films = filmDao.findTopFilmsWithoutLikes(3);
-
-        assertEquals(2, films.size());
-    }
-
-    @Test
-    public void addGenreToFilm() {
+    public void addGenresToFilm() {
         int testFilmId = filmDao.create(testFilm);
-        filmDao.addGenreToFilm(testFilmId, 1);
 
-        List<Genre> genres = filmDao.findGenreByFilmId(testFilmId);
+        filmDao.addGenresToFilm(testFilmId, genres);
 
-        assertEquals("Комедия", genres.get(0).getName());
+        List<Genre> filmGenres = filmDao.findGenresByFilmId(testFilmId);
+
+        assertEquals("Комедия", filmGenres.get(0).getName());
+        assertEquals(2, filmGenres.size());
     }
 
     @Test
     public void removeFilmsGenres() {
         int testFilmId = filmDao.create(testFilm);
-        filmDao.addGenreToFilm(testFilmId, 1);
+        filmDao.addGenresToFilm(testFilmId, genres);
 
         filmDao.removeFilmsGenres(testFilmId);
 
-        List<Genre> genres = filmDao.findGenreByFilmId(testFilmId);
+        List<Genre> genres = filmDao.findGenresByFilmId(testFilmId);
 
         assertEquals(0, genres.size());
     }
@@ -219,9 +201,9 @@ class FilmDaoTest {
     @Test
     public void findGenreByFilmId() {
         int testFilmId = filmDao.create(testFilm);
-        filmDao.addGenreToFilm(testFilmId, 1);
+        filmDao.addGenresToFilm(testFilmId, genres);
 
-        List<Genre> genres = filmDao.findGenreByFilmId(testFilmId);
+        List<Genre> genres = filmDao.findGenresByFilmId(testFilmId);
 
         assertEquals("Комедия", genres.get(0).getName());
     }

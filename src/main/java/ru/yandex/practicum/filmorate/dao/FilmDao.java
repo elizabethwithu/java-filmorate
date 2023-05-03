@@ -5,6 +5,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface FilmDao {
     int create(Film film);
@@ -23,11 +24,11 @@ public interface FilmDao {
 
     List<Film> findTopFilmsByLikesCount(int count);
 
-    List<Film> findTopFilmsWithoutLikes(int count);
-
-    void addGenreToFilm(int filmId, int genreId);
+    void addGenresToFilm(int filmId, List<Genre> genres);
 
     void removeFilmsGenres(int filmId);
 
-    List<Genre> findGenreByFilmId(int filmId);
+    List<Genre> findGenresByFilmId(int filmId);
+
+    Map<Integer, List<Genre>> findGenresByFilmIdIn(List<Integer> filmIds);
 }

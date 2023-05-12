@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,14 +8,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmControllerTest {
     @Autowired
     MockMvc mockMvc;
@@ -29,7 +34,10 @@ public class FilmControllerTest {
                             "\"name\": \"Матрица\"," +
                             "\"description\": \"Научно-фантастический боевик\"," +
                             "\"releaseDate\": \"1999-07-03\"," +
-                            "\"duration\": 136" +
+                            "\"duration\": 136," +
+                                "\"mpa\": {" +
+                                "\"id\": 1" +
+                                "}" +
                         "}"
                 );
 
@@ -43,6 +51,9 @@ public class FilmControllerTest {
                                 "              \"description\": \"Научно-фантастический боевик\"," +
                                 "              \"releaseDate\": \"1999-07-03\"," +
                                 "              \"duration\": 136," +
+                                "              \"mpa\": {" +
+                                "                   \"id\": 1" +
+                                "                        }," +
                                 "              \"id\": 1" +
                                 "           }")
                 );
@@ -173,8 +184,12 @@ public class FilmControllerTest {
                         "    \"name\": \"Матрица\"," +
                         "    \"description\": \"Научно-фантастический боевик\"," +
                         "    \"releaseDate\": \"1999-07-03\"," +
-                        "    \"duration\": 136" +
-                        " }");
+                        "    \"duration\": 136," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 1" +
+                        "             }" +
+                        "}"
+                );
 
         mockMvc.perform(requestBuilder);
 
@@ -185,6 +200,9 @@ public class FilmControllerTest {
                         "    \"description\": \"Научно-фантастический боевик\"," +
                         "    \"releaseDate\": \"1999-07-03\"," +
                         "    \"duration\": 184," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 1" +
+                        "             }," +
                         "    \"id\": 1" +
                         " }");
         mockMvc.perform(nextRequestBuilder);
@@ -304,34 +322,32 @@ public class FilmControllerTest {
                 );
     }
 
-//    @SneakyThrows
-//    @Test
-//    void updateUnknownFilm() {
-//        RequestBuilder requestBuilder = request(HttpMethod.PUT,"http://localhost:8080/films")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content("{" +
-//                        "    \"name\": \"Матрица\"," +
-//                        "    \"description\": \"Матрица\"," +
-//                        "    \"releaseDate\": \"1999-07-03\"," +
-//                        "    \"duration\": 136," +
-//                        "    \"id\": 2" +
-//                        " }");
-//
-//        mockMvc.perform(requestBuilder)
-//
-//                .andExpectAll(
-//                        status().isInternalServerError(),
-//                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-//                        MockMvcResultMatchers.content().json("{" +
-//                                        "\"Некорректное значение\":\"Film(" +
-//                                                         "name=Матрица, " +
-//                                                         "description=Матрица, " +
-//                                                         "releaseDate=1999-07-03, " +
-//                                                         "duration=136, id=2) " +
-//                                                         "отсутствует в памяти программы.\"" +
-//                                                         "}")
-//                );
-//    }
+    @SneakyThrows
+    @Test
+    void updateUnknownFilm() {
+        RequestBuilder requestBuilder = request(HttpMethod.PUT,"http://localhost:8080/films")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{" +
+                        "    \"name\": \"Матрица\"," +
+                        "    \"description\": \"Матрица\"," +
+                        "    \"releaseDate\": \"1999-07-03\"," +
+                        "    \"duration\": 136," +
+                        "    \"mpa\": {" +
+                        "               \"id\": 1" +
+                        "             }," +
+                        "    \"id\": 2" +
+                        " }");
+
+        mockMvc.perform(requestBuilder)
+
+                .andExpectAll(
+                        status().isNotFound(),
+                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+                        MockMvcResultMatchers.content().json("{" +
+                                        "\"Объект не найден\":\"Фильм с запрашиваемым id отсутствует.\"" +
+                                                         "}")
+                );
+    }
 
     @SneakyThrows
     @Test
@@ -342,7 +358,10 @@ public class FilmControllerTest {
                         "    \"name\": \"Матрица\"," +
                         "    \"description\": \"Научно-фантастический боевик\"," +
                         "    \"releaseDate\": \"1999-07-03\"," +
-                        "    \"duration\": 136" +
+                        "    \"duration\": 136," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 1" +
+                        "             }" +
                         " }");
         mockMvc.perform(requestBuilder);
         RequestBuilder nextRequestBuilder = request(HttpMethod.POST,"http://localhost:8080/films")
@@ -351,7 +370,10 @@ public class FilmControllerTest {
                         "    \"name\": \"Двухсотлетний человек\"," +
                         "    \"description\": \"Начало нового тысячелетия\"," +
                         "    \"releaseDate\": \"2000-04-15\"," +
-                        "    \"duration\": 132" +
+                        "    \"duration\": 132," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 3" +
+                        "             }" +
                         " }");
         mockMvc.perform(nextRequestBuilder);
 
@@ -362,6 +384,9 @@ public class FilmControllerTest {
                         "     \"description\": \"Научно-фантастический боевик\"," +
                         "     \"releaseDate\": \"1999-07-03\"," +
                         "     \"duration\": 136," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 1" +
+                        "             }," +
                         "     \"id\": 1" +
                         "  }," +
                         "  {" +
@@ -370,20 +395,23 @@ public class FilmControllerTest {
                         "     \"Люди уже не заводят дома собак и кошек: они покупают себе роботов.\"," +
                         "     \"releaseDate\": \"2000-04-15\"," +
                         "     \"duration\": 132," +
+                        "    \"mpa\": {" +
+                        "           \"id\": 1" +
+                        "             }," +
                         "     \"id\": 2" +
                         " }]");
         mockMvc.perform(getRequestBuilder);
     }
 
-//    @SneakyThrows
-//    @Test
-//    void findAllWithEmptyFilmsList() {
-//        RequestBuilder requestBuilder = request(HttpMethod.GET, "http://localhost:8080/films");
-//        mockMvc.perform(requestBuilder)
-//
-//                .andExpectAll(
-//                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-//                        MockMvcResultMatchers.content().json("[]")
-//                );
-//    }
+    @SneakyThrows
+    @Test
+    void findAllWithEmptyFilmsList() {
+        RequestBuilder requestBuilder = request(HttpMethod.GET, "http://localhost:8080/films");
+        mockMvc.perform(requestBuilder)
+
+                .andExpectAll(
+                        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+                        MockMvcResultMatchers.content().json("[]")
+                );
+    }
 }

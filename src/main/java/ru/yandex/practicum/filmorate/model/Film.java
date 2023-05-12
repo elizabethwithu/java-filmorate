@@ -8,8 +8,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import static ru.yandex.practicum.filmorate.validation.FilmValidationFailedMessage.*;
 
@@ -19,6 +18,8 @@ import static ru.yandex.practicum.filmorate.validation.FilmValidationFailedMessa
 @Getter
 @Setter
 public class Film {
+    private Integer id;
+
     @NotBlank(message = NAME_IS_BLANK)
     private String name;
 
@@ -34,12 +35,8 @@ public class Film {
     @Positive(message = DURATION_IS_NEGATIVE)
     private int duration;
 
-    private Integer id;
+    private List<Genre> genres;
 
-    private Set<Integer> idUsersWhoLikedFilm = new HashSet<>();
-
-    public static Integer getFilmsLikes(Film film) {
-            return film.getIdUsersWhoLikedFilm().size();
-        }
+    private Mpa mpa;
 }
 

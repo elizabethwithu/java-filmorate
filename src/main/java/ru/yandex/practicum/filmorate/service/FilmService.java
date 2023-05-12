@@ -3,76 +3,115 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class FilmService { //добавление и удаление лайка, вывод 10 наиболее популярных фильмов по количеству лайков
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+public class FilmService {
+    private final FilmDao filmDao;
+    private final UserDao userDao;
 
     public Film createFilm(Film film) {
-        return filmStorage.create(film);
+        int filmId = filmDao.create(film);
+
+        film.setId(filmId);
+        List<Genre> genres = film.getGenres();
+        setGenresForFilm(genres, film);
+        log.debug("Фильм {} успешно добавлен.", film);
+        return film;
     }
 
     public void removeFilmById(Integer id) {
-        filmStorage.remove(id);
+        Film film = filmDao.findFilmById(id);
+        filmDao.remove(id);
+        filmDao.removeFilmsGenres(id);
+        log.debug("Фильм {} успешно удален.", film);
     }
 
     public Film updateFilm(Film film) {
-        return filmStorage.update(film);
+        filmDao.findFilmById(film.getId());
+        filmDao.update(film);
+        List<Genre> genres = film.getGenres();
+
+        setGenresForFilm(genres, film);
+        log.debug("Фильм {} успешно обновлен.", film);
+        return film;
     }
 
     public Collection<Film> findAllFilms() {
-        return filmStorage.findAll();
+        Collection<Film> films = filmDao.findAll();
+        List<Integer> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+        Map<Integer, List<Genre>> filmIdGenresMap = filmDao.findGenresByFilmIdIn(filmIds);
+        for (Film film : films) {
+            List<Genre> genres = new ArrayList<>();
+            if (filmIdGenresMap.containsKey(film.getId())) {
+                genres = filmIdGenresMap.get(film.getId());
+            }
+            film.setGenres(genres);
+        }
+        log.debug("Текущее количество фильмов: {}", films.size());
+        return films;
     }
 
     public Film findFilmById(Integer id) {
-        return filmStorage.findFilmById(id);
+        Film film = filmDao.findFilmById(id);
+        film.setGenres(filmDao.findGenresByFilmId(id));
+
+        log.debug("Получен фильм {}.", film);
+        return film;
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        Film film = filmStorage.findFilmById(filmId);
-        User user = userStorage.findUserById(userId);
+        Film film = filmDao.findFilmById(filmId);
+        User user = userDao.findUserById(userId);
 
-        film.getIdUsersWhoLikedFilm().add(userId);
-        log.debug("Пользователь c {} поставил лайк фильму с айди {}.", user, filmId);
+        filmDao.addLike(filmId, userId);
+        log.debug("Пользователь c {} поставил лайк фильму {}.", user, film);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        User user = userStorage.findUserById(userId);
-        Set<Integer> idUsersWhoLikedFilm = filmStorage.findFilmById(filmId).getIdUsersWhoLikedFilm();
-
-        if (idUsersWhoLikedFilm.isEmpty()) {
-            throw new NotFoundException("Список фильмов пуст.");
-        }
-        idUsersWhoLikedFilm.remove(userId);
-        log.debug("Пользователь {} удалил лайк фильму с айди {}.", user, filmId);
+        User user = userDao.findUserById(userId);
+        Film film = filmDao.findFilmById(filmId);
+        filmDao.removeLike(filmId, userId);
+        log.debug("Пользователь {} удалил лайк фильму с {}.", user, film);
     }
 
     public List<Film> findTopFilmByLikes(Integer count) {
-        Collection<Film> films = filmStorage.findAll();
+        List<Film> topFilms = filmDao.findTopFilmsByLikesCount(count);
 
-        if (films.isEmpty()) {
-            throw new NotFoundException("Список фильмов пуст.");
+        for (Film film : topFilms) {
+            film.setGenres(filmDao.findGenresByFilmId(film.getId()));
         }
-        List<Film> topFilms = films.stream()
-                .sorted(Comparator.comparing(Film::getFilmsLikes).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
         log.debug("Топ {} фильмов успешно отобран.", count);
 
         return topFilms;
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
+    private void setGenresForFilm(List<Genre> genres, Film film) {
+        if (genres != null) {
+            genres = genres.stream().filter(distinctByKey(Genre::getId)).collect(Collectors.toList());
+
+            filmDao.removeFilmsGenres(film.getId());
+            filmDao.addGenresToFilm(film.getId(), genres);
+            film.setGenres(filmDao.findGenresByFilmId(film.getId()));
+        }
     }
 }

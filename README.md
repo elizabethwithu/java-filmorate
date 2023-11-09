@@ -1,4 +1,6 @@
 # java-filmorate
+Filmorate - бэкенд для сервиса по подбору фильмов на основе рекомендаций пользователей.
+
 В проекте используется реляционная база данных PosgreSQL.
 Структура базы данных представлена на ER-диаграмме:
 <img width="913" alt="filmorate_base" src="https://user-images.githubusercontent.com/117889272/232309050-b3bffc28-6b00-4904-b81d-80c081ca154f.png">
